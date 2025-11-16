@@ -7,14 +7,16 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Leaf, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "../hooks/useAuth";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error("Por favor, preencha todos os campos");
@@ -23,23 +25,10 @@ export function LoginPage() {
 
     setLoading(true);
     try {
-      // Obter usuários do localStorage
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      
-      // Buscar usuário
-      const user = users.find((u: any) => u.email === email && u.password === password);
-      
-      if (user) {
-        // Salvar usuário logado
-        localStorage.setItem("user", JSON.stringify(user));
-        localStorage.setItem("isAuthenticated", "true");
-        toast.success("Login realizado com sucesso!");
-        navigate("/dashboard");
-      } else {
-        toast.error("Email ou senha incorretos");
-      }
+      await login(email, password);
+      navigate("/dashboard");
     } catch (error: any) {
-      toast.error("Erro ao fazer login");
+      // Erro já foi tratado no useAuth
     } finally {
       setLoading(false);
     }

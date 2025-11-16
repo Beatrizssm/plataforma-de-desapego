@@ -11,7 +11,13 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "node prisma/seed.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:prepare": "cross-env NODE_ENV=test prisma migrate deploy --schema prisma/schema.test.prisma",
+    "test:reset": "cross-env NODE_ENV=test prisma migrate reset --force --schema prisma/schema.test.prisma"
   },
   "keywords": [
     "desapego",
@@ -28,11 +34,19 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
     "mysql2": "^3.15.3",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "winston": "^3.15.0"
   },
   "devDependencies": {
+    "@types/supertest": "^6.0.3",
+    "@vitest/coverage-v8": "^2.1.9",
+    "cross-env": "^7.0.3",
     "nodemon": "^3.1.11",
-    "prisma": "^6.19.0"
+    "prisma": "^6.19.0",
+    "supertest": "^7.0.0",
+    "ts-node": "^10.9.2",
+    "vitest": "^2.1.9"
   }
 }

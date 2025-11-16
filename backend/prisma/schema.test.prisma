@@ -1,0 +1,44 @@
+// Schema do Prisma para testes usando SQLite
+datasource db {
+  provider = "sqlite"
+  url      = env("TEST_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  profile   String    @default("user")
+  items     Item[]
+  messages  Message[]
+  createdAt DateTime  @default(now())
+}
+
+model Item {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  price       Float
+  available   Boolean   @default(true)
+  imageUrl    String?
+  ownerId     Int
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  createdAt   DateTime  @default(now())
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  text      String
+  timestamp DateTime @default(now())
+  userId    Int
+  itemId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
+

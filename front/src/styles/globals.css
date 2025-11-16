@@ -37,15 +37,10 @@
   --sidebar-accent-foreground: #F8F3E7;
   --sidebar-border: #8B5E3C;
   --sidebar-ring: #C9A77A;
-  :root {
-  --background: #ffffff;
-  --foreground: #111111;
-  --border: #e5e7eb;
 }
 
 .dark {
-  --background: #111111;
-  --foreground: #f9fafb;
-  --border: #333333;
-}
+  --background: #3A2B1D;
+  --foreground: #F8F3E7;
+  --border: #8B5E3C;
 }

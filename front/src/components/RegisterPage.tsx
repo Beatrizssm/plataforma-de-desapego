@@ -6,9 +6,11 @@ import { Label } from "./ui/label";
 import { Leaf, Mail, Lock, User, Phone, CreditCard, Home } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -57,34 +59,11 @@ export function RegisterPage() {
 
     setLoading(true);
     try {
-      // Obter usuários existentes
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      
-      // Verificar se email já existe
-      if (users.find((u: any) => u.email === email)) {
-        toast.error("Email já cadastrado");
-        setLoading(false);
-        return;
-      }
-
-      // Criar novo usuário
-      const newUser = {
-        id: Date.now().toString(),
-        name,
-        email,
-        phone: phone.replace(/\D/g, ""),
-        cpf: cpfNumbers,
-        password, // Em produção, isso deveria ser hash
-      };
-
-      // Adicionar usuário
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
-
-      toast.success("Cadastro realizado com sucesso!");
-      navigate("/login");
+      // Registrar no backend (phone e cpf são opcionais no backend)
+      await register(name, email, password);
+      navigate("/dashboard");
     } catch (error: any) {
-      toast.error("Erro ao realizar cadastro");
+      // Erro já foi tratado no useAuth
     } finally {
       setLoading(false);
     }

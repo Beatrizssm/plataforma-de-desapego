@@ -4,6 +4,8 @@ import { ArrowLeft, Mail, MapPin, Calendar, User, Star, CheckCircle2 } from "luc
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { itemService, Item } from "../services/itemService";
+import { useAuth } from "../hooks/useAuth";
 
 // Lista de itens fixos (mesma lista do ItemsListPage)
 const fixedItems = [
@@ -131,106 +133,87 @@ function StarRating({ rating }: { rating: number }) {
 export function ItemDetailsPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [item, setItem] = useState<any>(null);
-  const [donorRating, setDonorRating] = useState<number>(0);
+  const { user } = useAuth();
+  const [item, setItem] = useState<Item | null>(null);
+  const [donorRating, setDonorRating] = useState<number>(5.0);
   const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) {
-      navigate("/items");
-      return;
-    }
-
-    // Primeiro, busca nos itens fixos
-    let foundItem = fixedItems.find(item => item.id === id);
-    let itemIsOwner = false;
-
-    // Se não encontrar, busca nos itens do localStorage
-    if (!foundItem) {
-      const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
-      foundItem = myItems.find((item: any) => item.id === id);
-      
-      // Se for um item do localStorage, é do usuário
-      if (foundItem) {
-        itemIsOwner = true;
-        foundItem = {
-          ...foundItem,
-          location: foundItem.location || "Não informado",
-          postedDate: foundItem.postedDate || new Date().toLocaleDateString("pt-BR"),
-          donor: foundItem.donor || {
-            name: "Usuário",
-            email: "usuario@email.com",
-          },
-        };
+    const loadItem = async () => {
+      if (!id) {
+        navigate("/items");
+        return;
       }
-    }
 
-    if (foundItem) {
-      setItem(foundItem);
-      setIsOwner(itemIsOwner);
-      
-      // Carrega avaliações do doador
-      const donorEmail = foundItem.donor?.email || "";
-      if (donorEmail) {
-        const ratingsKey = `donor_ratings_${donorEmail}`;
-        const ratings = JSON.parse(localStorage.getItem(ratingsKey) || "[]");
-        if (ratings.length > 0) {
-          const averageRating = ratings.reduce((sum: number, r: number) => sum + r, 0) / ratings.length;
-          setDonorRating(Math.round(averageRating * 10) / 10); // Arredonda para 1 casa decimal
-        } else {
-          // Avaliação padrão para doadores sem avaliações
-          setDonorRating(5.0);
+      try {
+        setLoading(true);
+        const itemId = parseInt(id);
+        if (isNaN(itemId)) {
+          toast.error("ID de item inválido");
+          navigate("/items");
+          return;
         }
+
+        const fetchedItem = await itemService.getItemById(itemId);
+        setItem(fetchedItem);
+        setIsOwner(user?.id === fetchedItem.ownerId);
+        
+        // Avaliação padrão (pode ser implementado no backend futuramente)
+        setDonorRating(5.0);
+      } catch (error: any) {
+        toast.error("Erro ao carregar item: " + (error.message || "Item não encontrado"));
+        navigate("/items");
+      } finally {
+        setLoading(false);
       }
-    } else {
-      toast.error("Item não encontrado");
-      navigate("/items");
-    }
-  }, [id, navigate]);
+    };
+
+    loadItem();
+  }, [id, navigate, user]);
 
   const handleBuy = () => {
     if (item) {
-      // Atualiza o status do item no localStorage se for um item do usuário
-      const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
-      const itemIndex = myItems.findIndex((i: any) => i.id === item.id);
-      if (itemIndex !== -1) {
-        myItems[itemIndex].status = "reserved";
-        localStorage.setItem("myItems", JSON.stringify(myItems));
-      }
-      toast.success("Item comprado com sucesso! O doador foi notificado.");
+      toast.success("Interesse registrado! Entre em contato com o doador.");
+      handleChat();
     }
   };
 
   const handleChat = () => {
+    if (!user) {
+      toast.error("Você precisa estar logado para iniciar um chat");
+      navigate("/login");
+      return;
+    }
     navigate(`/chat/${id}`);
   };
 
-  const handleMarkAsSold = () => {
-    if (item && isOwner) {
-      const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
-      const itemIndex = myItems.findIndex((i: any) => i.id === item.id);
-      if (itemIndex !== -1) {
-        myItems[itemIndex].status = "sold";
-        localStorage.setItem("myItems", JSON.stringify(myItems));
-        setItem({ ...item, status: "sold" });
-        toast.success("Item marcado como vendido!");
+  const handleMarkAsSold = async () => {
+    if (item && isOwner && id) {
+      try {
+        await itemService.updateItem(parseInt(id), { available: false });
+        setItem({ ...item, available: false });
+        toast.success("Item marcado como indisponível!");
+      } catch (error: any) {
+        toast.error("Erro ao atualizar item: " + (error.message || "Erro desconhecido"));
       }
     }
   };
 
-  if (!item) {
+  if (loading || !item) {
     return (
       <div className="min-h-screen bg-[#F8F3E7] flex items-center justify-center">
-        <p className="text-[#8B5E3C]">Carregando...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5A3825] mx-auto mb-4"></div>
+          <p className="text-[#8B5E3C]">Carregando item...</p>
+        </div>
       </div>
     );
   }
 
   const statusConfig = {
     available: { label: "Disponível", color: "bg-green-600" },
-    reserved: { label: "Reservado", color: "bg-amber-600" },
-    donated: { label: "Doado", color: "bg-[#8B5E3C]" },
-    sold: { label: "Vendido", color: "bg-gray-600" },
+    reserved: { label: "Indisponível", color: "bg-amber-600" },
   };
 
   return (
@@ -250,7 +233,7 @@ export function ItemDetailsPage() {
           {/* Image */}
           <div className="bg-white rounded-2xl overflow-hidden border-2 border-[#C9A77A] shadow-lg">
             <img
-              src={item.image || "https://via.placeholder.com/500"}
+              src={item.imageUrl || "https://via.placeholder.com/500"}
               alt={item.title}
               className="w-full h-[500px] object-cover"
             />
@@ -260,18 +243,13 @@ export function ItemDetailsPage() {
           <div className="bg-white rounded-2xl p-8 border-2 border-[#C9A77A] shadow-lg">
             <div className="flex items-start justify-between mb-4">
               <h1 className="text-[#3A2B1D] text-2xl font-bold">{item.title}</h1>
-              <Badge className={statusConfig[item.status].color + " text-white"}>
-                {statusConfig[item.status].label}
+              <Badge className={statusConfig[item.available ? "available" : "reserved"].color + " text-white"}>
+                {statusConfig[item.available ? "available" : "reserved"].label}
               </Badge>
             </div>
 
-            <div className="flex gap-2 mb-6">
-              <Badge variant="outline" className="border-[#8B5E3C] text-[#5A3825]">
-                {item.category}
-              </Badge>
-              <Badge variant="outline" className="border-[#C9A77A] text-[#8B5E3C]">
-                Doação
-              </Badge>
+            <div className="mb-4">
+              <p className="text-[#5A3825] text-2xl font-bold">R$ {item.price.toFixed(2)}</p>
             </div>
 
             <div className="mb-8">
@@ -281,12 +259,8 @@ export function ItemDetailsPage() {
 
             <div className="space-y-4 mb-8 p-6 bg-[#F8F3E7] rounded-xl">
               <div className="flex items-center gap-3 text-[#3A2B1D]">
-                <MapPin className="h-5 w-5 text-[#8B5E3C]" />
-                <span>{item.location}</span>
-              </div>
-              <div className="flex items-center gap-3 text-[#3A2B1D]">
                 <Calendar className="h-5 w-5 text-[#8B5E3C]" />
-                <span>Publicado em {item.postedDate}</span>
+                <span>Publicado em {new Date(item.createdAt).toLocaleDateString("pt-BR")}</span>
               </div>
             </div>
 
@@ -295,12 +269,12 @@ export function ItemDetailsPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-[#3A2B1D]">
                   <User className="h-5 w-5 text-[#8B5E3C]" />
-                  <span className="font-semibold">{item.donor?.name || "Usuário"}</span>
+                  <span className="font-semibold">{item.owner?.name || "Usuário"}</span>
                 </div>
                 <div className="flex items-center gap-3 text-[#3A2B1D]">
                   <Mail className="h-5 w-5 text-[#8B5E3C]" />
-                  <a href={`mailto:${item.donor?.email || ""}`} className="hover:underline">
-                    {item.donor?.email || "usuario@email.com"}
+                  <a href={`mailto:${item.owner?.email || ""}`} className="hover:underline">
+                    {item.owner?.email || "usuario@email.com"}
                   </a>
                 </div>
                 <div className="flex items-center gap-3 text-[#3A2B1D] pt-2 border-t border-[#C9A77A]">
@@ -313,30 +287,30 @@ export function ItemDetailsPage() {
               </div>
             </div>
 
-            {item.status === "available" && (
+            {item.available && !isOwner && (
               <>
                 <Button
                   onClick={handleBuy}
                   className="w-full bg-[#5A3825] hover:bg-[#3A2B1D] text-[#F8F3E7] py-6 rounded-xl"
                 >
-                  Comprar
+                  Quero esse item
                 </Button>
                 <Button
                   onClick={handleChat}
                   className="w-full bg-[#8B5E3C] hover:bg-[#6B4A2C] text-[#F8F3E7] py-6 rounded-xl mt-4"
                 >
-                  Chat
+                  Iniciar Chat
                 </Button>
               </>
             )}
 
-            {isOwner && item.status !== "sold" && (
+            {isOwner && item.available && (
               <Button
                 onClick={handleMarkAsSold}
                 className="w-full bg-gray-600 hover:bg-gray-700 text-[#F8F3E7] py-6 rounded-xl mt-4"
               >
                 <CheckCircle2 className="mr-2 h-5 w-5" />
-                Marcar como Vendido
+                Marcar como Indisponível
               </Button>
             )}
           </div>

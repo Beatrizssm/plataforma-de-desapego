@@ -1,11 +1,17 @@
 import prisma from "../prisma/client.js";
+import { successResponse } from "../utils/responseHelper.js";
+import { asyncHandler } from "../middlewares/errorHandler.js";
 
-export async function getAllUsers(req, res) {
-  try {
-    const users = await prisma.user.findMany();
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar usuários" });
-  }
-}
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      profile: true,
+      createdAt: true,
+    },
+  });
+  return successResponse(res, "Usuários listados com sucesso!", users);
+});
 

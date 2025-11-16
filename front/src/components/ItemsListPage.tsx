@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { CardItem } from "./CardItem";
 import { Badge } from "./ui/badge";
 import { Sidebar } from "./Sidebar";
+import { itemService, Item } from "../services/itemService";
+import { toast } from "sonner";
 
 // Lista de itens fixos
 const fixedItems = [
@@ -103,39 +105,52 @@ export function ItemsListPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
+  const [allItems, setAllItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Carregar itens do backend
   useEffect(() => {
-    setLoading(true);
-    
-    // Combinar itens fixos com itens do localStorage
-    const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
-    let allItems = [...fixedItems, ...myItems];
+    const loadItems = async () => {
+      try {
+        setLoading(true);
+        const fetchedItems = await itemService.getAllItems();
+        setAllItems(fetchedItems);
+      } catch (error: any) {
+        toast.error("Erro ao carregar itens: " + (error.message || "Erro desconhecido"));
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Aplicar filtros
-    if (statusFilter !== "all") {
-      allItems = allItems.filter(item => item.status === statusFilter);
-    }
-    
-    if (categoryFilter !== "all") {
-      allItems = allItems.filter(item => 
-        item.category.toLowerCase() === categoryFilter.toLowerCase()
-      );
+    loadItems();
+  }, []);
+
+  // Aplicar filtros e busca
+  useEffect(() => {
+    let filtered = [...allItems];
+
+    // Filtro de disponibilidade
+    if (statusFilter === "available") {
+      filtered = filtered.filter(item => item.available);
+    } else if (statusFilter === "reserved") {
+      filtered = filtered.filter(item => !item.available);
     }
 
-    // Aplicar busca
+    // Filtro de categoria (se implementado no backend)
+    // Por enquanto, não há categoria no backend, então ignoramos
+
+    // Busca
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      allItems = allItems.filter(item =>
+      filtered = filtered.filter(item =>
         item.title.toLowerCase().includes(query) ||
         item.description.toLowerCase().includes(query)
       );
     }
 
-    setItems(allItems);
-    setLoading(false);
-  }, [statusFilter, categoryFilter, searchQuery]);
+    setItems(filtered);
+  }, [allItems, statusFilter, categoryFilter, searchQuery]);
 
   return (
     <div className="flex min-h-screen bg-[#F8F3E7]">
@@ -230,7 +245,15 @@ export function ItemsListPage() {
             {items.map((item) => (
               <CardItem
                 key={item.id}
-                {...item}
+                id={item.id.toString()}
+                image={item.imageUrl || "https://via.placeholder.com/300"}
+                title={item.title}
+                description={item.description}
+                status={item.available ? "available" : "reserved"}
+                category=""
+                location=""
+                postedDate={new Date(item.createdAt).toLocaleDateString("pt-BR")}
+                donor={item.owner}
                 onClick={() => navigate(`/item/${item.id}`)}
               />
             ))}
