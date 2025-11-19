@@ -1,27 +1,32 @@
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: mysql_desapego
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_desapego
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: desapego_db
-      MYSQL_USER: bia
-      MYSQL_PASSWORD: bia123
+      POSTGRES_USER: bia
+      POSTGRES_PASSWORD: bia123
+      POSTGRES_DB: desapego_db
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - ./mysql_data:/var/lib/mysql
+      - ./postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin_desapego
-    restart: always
-    environment:
-      PMA_HOST: mysql
-      PMA_USER: root
-      PMA_PASSWORD: root
-    ports:
-      - "8080:80"
-    depends_on:
-      - mysql
+  # pgadmin opcional - pode ser comentado se houver problemas de conexão
+  # pgadmin:
+  #   image: dpage/pgadmin4:8.2
+  #   container_name: pgadmin_desapego
+  #   restart: always
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   ports:
+  #     - "8080:80"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy

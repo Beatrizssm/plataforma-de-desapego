@@ -2,7 +2,7 @@
 
 ## ⚠️ Importante
 
-Os testes de integração **requerem que o banco de dados MySQL esteja rodando**.
+Os testes de integração **requerem que o banco de dados PostgreSQL esteja rodando**.
 
 ## 🚀 Como executar os testes de integração
 
@@ -12,7 +12,7 @@ Os testes de integração **requerem que o banco de dados MySQL esteja rodando**
    ```
 
 2. **Verifique se o banco está acessível:**
-   - O MySQL deve estar rodando na porta `3306`
+   - O PostgreSQL deve estar rodando na porta `5432`
    - As credenciais devem estar configuradas no `.env` ou `.env.test`
 
 3. **Execute os testes:**

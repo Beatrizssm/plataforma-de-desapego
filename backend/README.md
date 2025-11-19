@@ -1,12 +1,12 @@
 # Backend - Plataforma de Desapego
 
-API REST desenvolvida com Node.js, Express, Prisma e MySQL.
+API REST desenvolvida com Node.js, Express, Prisma e PostgreSQL.
 
 ## 🚀 Tecnologias
 
 - **Node.js** + **Express** - Framework web
-- **Prisma ORM** - ORM para MySQL
-- **MySQL** - Banco de dados (Docker)
+- **Prisma ORM** - ORM para PostgreSQL
+- **PostgreSQL** - Banco de dados (Docker)
 - **JWT** - Autenticação
 - **bcrypt** - Hash de senhas
 
@@ -37,7 +37,7 @@ npm install
 
 1. Configure o arquivo `.env`:
 ```env
-DATABASE_URL="mysql://bia:bia123@localhost:3306/desapego_db"
+DATABASE_URL="postgresql://bia:bia123@localhost:5432/desapego_db"
 PORT=4000
 JWT_SECRET=seusegredoaqui123
 JWT_EXPIRES_IN=1d

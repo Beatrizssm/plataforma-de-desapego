@@ -6,7 +6,7 @@ Os testes unitários estão enfrentando problemas com Jest + ES Modules. O Jest 
 
 ## Status Atual
 
-- ✅ **Testes de Integração**: Funcionam perfeitamente (quando o MySQL está disponível)
+- ✅ **Testes de Integração**: Funcionam perfeitamente (quando o PostgreSQL está disponível)
 - ⚠️ **Testes Unitários**: Têm problemas com mocks de ES modules
 
 ## Soluções Alternativas
@@ -43,7 +43,7 @@ Os testes de integração já cobrem a maior parte da funcionalidade e funcionam
 - `items.test.js` - Testa rotas de itens
 
 Estes testes:
-- Funcionam quando o MySQL está disponível
+- Funcionam quando o PostgreSQL está disponível
 - Pulam automaticamente quando o banco não está disponível
 - Testam a funcionalidade completa da API
 

@@ -26,7 +26,7 @@ describe("Auth Routes - Integration Tests", () => {
         // Ignorar erros do reset (pode ser que o banco não exista ainda)
       }
 
-      // Tentar usar SQLite se disponível, senão usar MySQL
+      // Tentar usar SQLite se disponível, senão usar PostgreSQL
       const testDbUrl = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL;
 
       if (testDbUrl?.includes("sqlite") || testDbUrl?.includes("file:")) {
@@ -59,7 +59,7 @@ describe("Auth Routes - Integration Tests", () => {
       dbAvailable = true;
     } catch (error) {
       console.warn("⚠️  Banco de dados não disponível. Testes de integração serão pulados.");
-      console.warn("   Certifique-se de que o MySQL está rodando:");
+      console.warn("   Certifique-se de que o PostgreSQL está rodando:");
       console.warn("   1. Inicie o Docker Desktop");
       console.warn("   2. Execute: docker compose up -d");
       console.warn(`   Erro: ${error.message}`);

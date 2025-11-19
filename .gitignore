@@ -30,6 +30,7 @@ prisma/migrations/*.sql
 backend/node_modules/
 backend/.env
 backend/mysql_data/
+backend/postgres_data/
 
 # Frontend specific
 front/node_modules/
