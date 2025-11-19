@@ -34,3 +34,7 @@ Thumbs.db
 
 # Test
 *.test.js.snap
+
+# Database data
+postgres_data/
+*.pid
