@@ -1,28 +1,22 @@
 /**
  * Tela de Perfil
- * Design conforme Figma
+ * Design conforme imagem
  */
 
 import { useEffect, useState } from "react";
-import { AppLayout } from "../../layout/AppLayout";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
 import { Card } from "../../components/ui/card";
-import { ItemCard } from "../../components/ItemCard/ItemCard";
-import { User, Mail, Package, Edit2, Save, X } from "lucide-react";
+import { User, FileText, Clock, Plus, Headphones, Edit2 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { itemService, Item } from "../../services/itemService";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 
 export function ProfilePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [myItems, setMyItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState(user?.name || "");
 
   useEffect(() => {
     const loadItems = async () => {
@@ -40,15 +34,8 @@ export function ProfilePage() {
 
     if (user) {
       loadItems();
-      setEditedName(user.name);
     }
   }, [user]);
-
-  const handleSave = () => {
-    // Aqui você pode implementar a atualização do perfil no backend
-    toast.success("Perfil atualizado com sucesso!");
-    setIsEditing(false);
-  };
 
   const handleLogout = () => {
     logout();
@@ -56,147 +43,168 @@ export function ProfilePage() {
     toast.success("Logout realizado com sucesso!");
   };
 
+  const actionCards = [
+    {
+      id: 1,
+      icon: FileText,
+      title: "Informações pessoais",
+      description: "Informações sobre seus documentos e sua conta.",
+      onClick: () => navigate("/account-data"),
+    },
+    {
+      id: 2,
+      icon: Clock,
+      title: "Histórico de itens",
+      description: "Itens que você comprou, doou, trocou ou recebeu.",
+      onClick: () => navigate("/my-sales"),
+    },
+    {
+      id: 3,
+      icon: Plus,
+      title: "Adicionar item",
+      description: "Adicione novos itens para venda, doação ou troca.",
+      onClick: () => navigate("/add-item"),
+    },
+    {
+      id: 4,
+      icon: Headphones,
+      title: "Suporte",
+      description: "Como podemos te ajudar?",
+      onClick: () => navigate("/support"),
+    },
+  ];
+
   return (
-    <AppLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-foreground text-3xl font-bold mb-2">Meu Perfil</h1>
-          <p className="text-muted-foreground">Gerencie suas informações e itens</p>
+    <div className="min-h-screen bg-[#F5F5F5] flex flex-col">
+      {/* Header */}
+      <header className="bg-[#5941F2] text-white shadow-medium">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <img 
+              src="/Captura de tela 2025-11-28 005239.png" 
+              alt="DESAPEGA" 
+              className="h-16 w-auto"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.style.display = 'none';
+              }}
+            />
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="text-white hover:text-white/80 transition-colors text-sm"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={handleLogout}
+                className="text-white hover:text-white/80 transition-colors text-sm"
+              >
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        {/* User Profile Summary */}
+        <div className="flex items-center gap-6 mb-8">
+          <div className="relative">
+            <div className="w-24 h-24 rounded-full bg-[#5941F2] flex items-center justify-center">
+              <User className="h-12 w-12 text-white" />
+            </div>
+            <button className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors">
+              <Edit2 className="h-4 w-4 text-[#5941F2]" />
+            </button>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-[#3A3A3A] mb-1">
+              {user?.name || "Nome Completo"}
+            </h1>
+            <p className="text-base text-[#3A3A3A]">
+              {user?.email || "hotmail@hotmail.com"}
+            </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Card */}
-          <div className="lg:col-span-1">
-            <Card className="p-6 border-2 border-border shadow-medium">
-              <div className="flex flex-col items-center mb-6">
-                <div className="bg-primary-400 p-6 rounded-full mb-4">
-                  <User className="h-12 w-12 text-primary-50" />
-                </div>
-                {isEditing ? (
-                  <div className="w-full space-y-4">
-                    <div>
-                      <Label htmlFor="name" className="text-foreground">
-                        Nome
-                      </Label>
-                      <Input
-                        id="name"
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        className="mt-2 border-primary-300 text-foreground"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={handleSave}
-                        className="flex-1 bg-primary-400 hover:bg-primary-500 text-primary-50"
-                        size="sm"
-                      >
-                        <Save className="h-4 w-4 mr-2" />
-                        Salvar
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          setIsEditing(false);
-                          setEditedName(user?.name || "");
-                        }}
-                        variant="outline"
-                        className="flex-1 border-primary-300 text-foreground"
-                        size="sm"
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        Cancelar
-                      </Button>
-                    </div>
+        {/* Action Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {actionCards.map((card) => {
+            const IconComponent = card.icon;
+            return (
+              <Card
+                key={card.id}
+                onClick={card.onClick}
+                className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="bg-[#F5F5F5] p-3 rounded-lg">
+                    <IconComponent className="h-6 w-6 text-[#5941F2]" />
                   </div>
-                ) : (
-                  <>
-                    <h2 className="text-foreground text-xl font-bold mb-2">
-                      {user?.name || "Usuário"}
-                    </h2>
-                    <div className="flex items-center gap-2 text-muted-foreground mb-4">
-                      <Mail className="h-4 w-4" />
-                      <span className="text-sm">{user?.email || ""}</span>
-                    </div>
-                    <Button
-                      onClick={() => setIsEditing(true)}
-                      variant="outline"
-                      className="border-primary-300 text-foreground hover:bg-muted"
-                      size="sm"
-                    >
-                      <Edit2 className="h-4 w-4 mr-2" />
-                      Editar Perfil
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              <div className="border-t border-border pt-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Itens Cadastrados</span>
-                  <span className="text-foreground font-semibold">{myItems.length}</span>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-[#3A3A3A] mb-2">
+                      {card.title}
+                    </h3>
+                    <p className="text-sm text-[#3A3A3A]">
+                      {card.description}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Itens Disponíveis</span>
-                  <span className="text-foreground font-semibold">
-                    {myItems.filter((i) => i.available).length}
-                  </span>
-                </div>
-              </div>
+              </Card>
+            );
+          })}
+        </div>
+      </main>
 
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="w-full mt-4 border-destructive text-destructive hover:bg-destructive/10"
-              >
-                Sair da Conta
-              </Button>
-            </Card>
-          </div>
-
-          {/* My Items */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-foreground text-2xl font-bold flex items-center gap-2">
-                <Package className="h-6 w-6" />
-                Meus Itens
-              </h2>
-              <Button
-                onClick={() => navigate("/add-item")}
-                className="bg-primary-400 hover:bg-primary-500 text-primary-50"
-              >
-                Adicionar Item
-              </Button>
+      {/* Footer */}
+      <footer className="bg-[#5941F2] text-white mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Conheça-nos */}
+            <div>
+              <h3 className="font-semibold mb-4">Conheça-nos</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="#" className="text-white hover:underline">Sobre nós</a>
+                </li>
+                <li>
+                  <a href="#" className="text-white hover:underline">Sobre o Criador</a>
+                </li>
+              </ul>
             </div>
 
-            {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-400"></div>
-              </div>
-            ) : myItems.length === 0 ? (
-              <Card className="p-12 text-center border-2 border-border">
-                <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground text-lg mb-4">
-                  Você ainda não cadastrou nenhum item.
-                </p>
-                <Button
-                  onClick={() => navigate("/add-item")}
-                  className="bg-primary-400 hover:bg-primary-500 text-primary-50"
-                >
-                  Criar Primeiro Item
-                </Button>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {myItems.map((item) => (
-                  <ItemCard key={item.id} item={item} />
-                ))}
-              </div>
-            )}
+            {/* Ajuda */}
+            <div>
+              <h3 className="font-semibold mb-4">Ajuda</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="#" className="text-white hover:underline">Suporte</a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Logo */}
+            <div className="flex items-center justify-center md:justify-end -mt-4">
+              <img 
+                src="/ativo-1-10-1.png" 
+                alt="DESAPEGA" 
+                className="h-16 w-auto"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  img.style.display = 'none';
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="mt-8 pt-6 border-t border-[#4a35d1] text-center text-sm">
+            <p>© 2025 Beatriz. Todos os direitos reservados.</p>
           </div>
         </div>
-      </div>
-    </AppLayout>
+      </footer>
+    </div>
   );
 }
-

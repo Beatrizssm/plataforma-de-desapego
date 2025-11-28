@@ -1,79 +1,63 @@
 /**
  * Footer da aplicação
- * Design conforme Figma
+ * Design conforme imagem
  */
 
 import { Link } from "react-router-dom";
-import { Package, Mail, Instagram, Facebook } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-primary-500 text-primary-50 mt-auto">
+    <footer className="bg-[#5941F2] text-white mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Logo e Descrição */}
-          <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="bg-primary-400 p-2 rounded-lg">
-                <Package className="h-6 w-6" />
-              </div>
-              <span className="font-bold text-xl">Plataforma de Desapego</span>
-            </div>
-            <p className="text-primary-100 text-sm">
-              Conectando pessoas e promovendo o consumo consciente através da 
-              doação e troca de itens.
-            </p>
-          </div>
-
-          {/* Links Rápidos */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Conheça-nos */}
           <div>
-            <h3 className="font-semibold mb-4">Links Rápidos</h3>
+            <h3 className="font-semibold mb-4">Conheça-nos</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/home" className="hover:text-primary-100 transition-colors">
-                  Início
+                <Link to="/about" className="text-white hover:underline transition-colors">
+                  Sobre nós
                 </Link>
               </li>
               <li>
-                <Link to="/items" className="hover:text-primary-100 transition-colors">
-                  Explorar Itens
-                </Link>
-              </li>
-              <li>
-                <Link to="/profile" className="hover:text-primary-100 transition-colors">
-                  Meu Perfil
+                <Link to="/creator" className="text-white hover:underline transition-colors">
+                  Sobre o Criador
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contato */}
+          {/* Ajuda */}
           <div>
-            <h3 className="font-semibold mb-4">Contato</h3>
+            <h3 className="font-semibold mb-4">Ajuda</h3>
             <ul className="space-y-2 text-sm">
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <a href="mailto:contato@desapego.com" className="hover:text-primary-100 transition-colors">
-                  contato@desapego.com
-                </a>
-              </li>
-              <li className="flex items-center gap-3 mt-4">
-                <a href="#" className="hover:text-primary-100 transition-colors">
-                  <Instagram className="h-5 w-5" />
-                </a>
-                <a href="#" className="hover:text-primary-100 transition-colors">
-                  <Facebook className="h-5 w-5" />
-                </a>
+              <li>
+                <Link to="/support" className="text-white hover:underline transition-colors">
+                  Suporte
+                </Link>
               </li>
             </ul>
+          </div>
+
+          {/* Logo */}
+          <div className="flex items-center justify-center md:justify-end -mt-4">
+            <img 
+              src="/ativo-1-10-1.png" 
+              alt="DESAPEGA" 
+              className="h-16 w-auto"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.style.display = 'none';
+              }}
+            />
           </div>
         </div>
 
-        <div className="border-t border-primary-400 mt-8 pt-6 text-center text-sm text-primary-100">
-          <p>&copy; {new Date().getFullYear()} Plataforma de Desapego. Todos os direitos reservados.</p>
+        {/* Copyright */}
+        <div className="mt-6 pt-6 border-t border-white/20 text-center text-sm text-white/90">
+          <p>© 2025 Beatriz. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>
   );
 }
-

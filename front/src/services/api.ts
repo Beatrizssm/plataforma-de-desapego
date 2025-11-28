@@ -4,6 +4,8 @@
  * Tratamento global de erros
  */
 
+import logger from "../utils/logger";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
 // Criar instância do fetch com interceptadores
@@ -34,6 +36,9 @@ class ApiClient {
     }
 
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Log da requisição
+    logger.debug(`Requisição ${options.method || "GET"}`, { url, endpoint });
 
     try {
       const response = await fetch(url, {
@@ -43,23 +48,65 @@ class ApiClient {
 
       // Se não autorizado, limpar token e redirecionar
       if (response.status === 401 || response.status === 403) {
+        logger.warn("Requisição não autorizada", { url, status: response.status });
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         window.location.href = "/login";
         throw new Error("Não autorizado");
       }
 
-      const data = await response.json();
+      // Verificar se a resposta tem conteúdo JSON
+      const contentType = response.headers.get("content-type");
+      let data;
+      
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        // Se não for JSON, tentar ler como texto
+        const text = await response.text();
+        throw new Error(text || "Erro na requisição");
+      }
 
+      // Verificar status HTTP e campo success
       if (!response.ok) {
         throw new Error(data.message || "Erro na requisição");
       }
 
+      // Verificar se a resposta indica sucesso (mesmo com status 200)
+      if (data.success === false) {
+        logger.error("Resposta com success: false", { url, data });
+        throw new Error(data.message || "Erro na requisição");
+      }
+
+      logger.api(options.method || "GET", url, response.status);
       return data;
     } catch (error) {
+      // Tratar erros de rede (ERR_FAILED, ERR_CONNECTION_REFUSED, etc.)
+      if (error instanceof TypeError) {
+        const errorMessage = error.message.toLowerCase();
+        if (
+          errorMessage.includes("fetch") ||
+          errorMessage.includes("network") ||
+          errorMessage.includes("failed") ||
+          errorMessage.includes("refused")
+        ) {
+          logger.error("Erro de conexão com o servidor", {
+            url,
+            baseURL: this.baseURL,
+            error: error.message,
+          });
+          throw new Error(
+            `Não foi possível conectar ao servidor em ${this.baseURL}. Verifique se o backend está rodando.`
+          );
+        }
+      }
+      
       if (error instanceof Error) {
+        logger.error("Erro na requisição", { url, error: error.message });
         throw error;
       }
+      
+      logger.error("Erro desconhecido na requisição", { url });
       throw new Error("Erro desconhecido na requisição");
     }
   }

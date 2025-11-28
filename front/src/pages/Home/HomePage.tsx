@@ -3,13 +3,13 @@
  * Design conforme Figma
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AppLayout } from "../../layout/AppLayout";
 import { ItemCard } from "../../components/ItemCard";
 import { CategoryFilter } from "../../components/CategoryFilter";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Compass, ChevronLeft, ChevronRight, Shirt, Sun, Sparkles, Footprints, ShoppingBag, Monitor, Sofa, WashingMachine } from "lucide-react";
 import { itemService, Item } from "../../services/itemService";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -20,11 +20,37 @@ export function HomePage() {
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [categoryScrollPosition, setCategoryScrollPosition] = useState(0);
 
   // Categorias disponíveis (pode vir do backend no futuro)
   const categories = ["Roupas", "Eletrônicos", "Móveis", "Livros", "Outros"];
+
+  // Categorias com ícones para a barra horizontal
+  const categoryItems = [
+    { id: "roupa", name: "Roupa", icon: Shirt },
+    { id: "acessorios", name: "Acessórios", icon: Sun },
+    { id: "beleza", name: "Beleza", icon: Sparkles },
+    { id: "calcados", name: "Calçados", icon: Footprints },
+    { id: "bolsas", name: "Bolsas", icon: ShoppingBag },
+    { id: "eletronicos", name: "Eletrônicos", icon: Monitor },
+    { id: "moveis", name: "Móveis", icon: Sofa },
+    { id: "eletro", name: "Eletro", icon: WashingMachine },
+  ];
+
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCategories = (direction: "left" | "right") => {
+    if (categoryScrollRef.current) {
+      const scrollAmount = 200;
+      const newPosition = direction === "left" 
+        ? categoryScrollPosition - scrollAmount 
+        : categoryScrollPosition + scrollAmount;
+      categoryScrollRef.current.scrollTo({ left: newPosition, behavior: "smooth" });
+      setCategoryScrollPosition(newPosition);
+    }
+  };
 
   useEffect(() => {
     const loadItems = async () => {
@@ -57,8 +83,11 @@ export function HomePage() {
       );
     }
 
-    // Filtro de categoria (se implementado no backend)
-    // Por enquanto, não há categoria no backend
+    // Filtro de categoria
+    if (selectedCategory !== "all" && selectedCategory !== "available" && selectedCategory !== "unavailable") {
+      // Aqui você pode implementar o filtro por categoria quando o backend suportar
+      // Por enquanto, apenas filtra por disponibilidade
+    }
 
     // Filtro de disponibilidade
     if (selectedCategory === "available") {
@@ -72,69 +101,72 @@ export function HomePage() {
 
   return (
     <AppLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-foreground text-3xl font-bold mb-2">
-            Explorar Itens
-          </h1>
-          <p className="text-muted-foreground">
-            Descubra itens disponíveis para doação e adoção
-          </p>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="bg-card rounded-2xl border-2 border-border shadow-soft p-6 mb-8">
-          <div className="flex gap-3 mb-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary-300" />
-              <Input
-                type="text"
-                placeholder="Buscar itens..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-background border-primary-300 text-foreground placeholder:text-muted-foreground focus:border-primary-400 focus:ring-primary-400"
-              />
-            </div>
-            <Button
-              onClick={() => setShowFilters(!showFilters)}
-              variant="outline"
-              className="border-primary-300 text-foreground hover:bg-muted"
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Categorias */}
+        <div className="mb-6 flex flex-col items-center">
+          <h2 className="text-[#3A3A3A] text-lg font-semibold mb-2 text-center">Categorias</h2>
+          <div className="border-t border-gray-300 mb-4 w-full max-w-4xl"></div>
+          <div className="relative w-full max-w-4xl">
+            <button
+              onClick={() => scrollCategories("left")}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors border border-gray-200"
             >
-              <SlidersHorizontal className="h-5 w-5 mr-2" />
-              Filtros
-            </Button>
-          </div>
-
-          {/* Category Filter */}
-          {showFilters && (
-            <div className="pt-4 border-t border-border">
-              <CategoryFilter
-                categories={["available", "unavailable", ...categories]}
-                selectedCategory={selectedCategory}
-                onSelectCategory={setSelectedCategory}
-              />
+              <ChevronLeft className="h-5 w-5 text-gray-600" />
+            </button>
+            <div
+              ref={categoryScrollRef}
+              className="flex gap-4 overflow-x-auto scrollbar-hide px-12 py-2 justify-center"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {categoryItems.map((category) => {
+                const IconComponent = category.icon;
+                const isSelected = selectedCategory === category.id;
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(isSelected ? "all" : category.id)}
+                    className={`flex flex-col items-center gap-2 min-w-[90px] p-2 rounded-lg transition-all ${
+                      isSelected 
+                        ? 'bg-[#5941F2] text-white shadow-md' 
+                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg ${
+                      isSelected ? 'bg-white/20' : 'bg-white border border-gray-200'
+                    }`}>
+                      <IconComponent className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-gray-600'}`} />
+                    </div>
+                    <span className="text-xs font-medium whitespace-nowrap">{category.name}</span>
+                  </button>
+                );
+              })}
             </div>
-          )}
+            <button
+              onClick={() => scrollCategories("right")}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors border border-gray-200"
+            >
+              <ChevronRight className="h-5 w-5 text-gray-600" />
+            </button>
+          </div>
         </div>
 
         {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-muted-foreground text-sm">
+        <div className="mb-4">
+          <p className="text-muted-foreground text-xs">
             {filteredItems.length} {filteredItems.length === 1 ? "item encontrado" : "itens encontrados"}
           </p>
         </div>
 
         {/* Loading */}
         {loading && (
-          <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-400"></div>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400"></div>
           </div>
         )}
 
         {/* Items Grid */}
         {!loading && filteredItems.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredItems.map((item) => (
               <ItemCard key={item.id} item={item} />
             ))}
@@ -143,8 +175,8 @@ export function HomePage() {
 
         {/* No Results */}
         {!loading && filteredItems.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg mb-4">
+          <div className="text-center py-12">
+            <p className="text-muted-foreground text-sm mb-3">
               Nenhum item encontrado com os filtros selecionados.
             </p>
             <Button

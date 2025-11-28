@@ -1,12 +1,19 @@
 import prisma from "../prisma/client.js";
 import { validateItemData, validateId } from "../utils/validators.js";
 import { AppError } from "../middlewares/errorHandler.js";
+import logger from "../logger/logger.js";
 
 export async function createItem(data, userId) {
   validateId(userId);
   validateItemData(data);
 
-  return await prisma.item.create({
+  logger.debug({
+    message: "Criando novo item",
+    userId,
+    title: data.title,
+  });
+
+  const item = await prisma.item.create({
     data: {
       title: data.title.trim(),
       description: data.description.trim(),
@@ -25,20 +32,44 @@ export async function createItem(data, userId) {
       },
     },
   });
+
+  logger.info({
+    message: "Item criado com sucesso",
+    itemId: item.id,
+    userId,
+    title: item.title,
+  });
+
+  return item;
 }
 
 export async function getAllItems() {
-  return await prisma.item.findMany({
+  logger.debug({ message: "Buscando todos os itens" });
+  
+  const items = await prisma.item.findMany({
     include: { owner: { select: { id: true, name: true, email: true } } },
     orderBy: {
       createdAt: "desc",
     },
   });
+
+  logger.debug({
+    message: "Itens recuperados",
+    count: items.length,
+  });
+
+  return items;
 }
 
 export async function getItemById(id) {
   const itemId = validateId(id);
-  return await prisma.item.findUnique({
+  
+  logger.debug({
+    message: "Buscando item por ID",
+    itemId,
+  });
+
+  const item = await prisma.item.findUnique({
     where: { id: itemId },
     include: {
       owner: {
@@ -50,15 +81,52 @@ export async function getItemById(id) {
       },
     },
   });
+
+  if (!item) {
+    logger.warn({
+      message: "Item não encontrado",
+      itemId,
+    });
+  } else {
+    logger.debug({
+      message: "Item encontrado",
+      itemId,
+      title: item.title,
+    });
+  }
+
+  return item;
 }
 
 export async function updateItem(id, data, userId) {
   const itemId = validateId(id);
   validateId(userId);
 
+  logger.debug({
+    message: "Atualizando item",
+    itemId,
+    userId,
+    updates: Object.keys(data),
+  });
+
   const item = await prisma.item.findUnique({ where: { id: itemId } });
-  if (!item) throw new AppError("Item não encontrado", 404);
-  if (item.ownerId !== userId) throw new AppError("Acesso negado. Você não é o dono deste item.", 403);
+  if (!item) {
+    logger.warn({
+      message: "Tentativa de atualizar item inexistente",
+      itemId,
+      userId,
+    });
+    throw new AppError("Item não encontrado", 404);
+  }
+  if (item.ownerId !== userId) {
+    logger.warn({
+      message: "Tentativa de atualizar item de outro usuário",
+      itemId,
+      itemOwnerId: item.ownerId,
+      userId,
+    });
+    throw new AppError("Acesso negado. Você não é o dono deste item.", 403);
+  }
 
   // Validar dados se fornecidos
   if (data.title !== undefined && data.title.trim().length < 3) {
@@ -78,7 +146,7 @@ export async function updateItem(id, data, userId) {
   if (data.available !== undefined) updateData.available = Boolean(data.available);
   if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl ? data.imageUrl.trim() : null;
 
-  return await prisma.item.update({
+  const updatedItem = await prisma.item.update({
     where: { id: itemId },
     data: updateData,
     include: {
@@ -91,16 +159,54 @@ export async function updateItem(id, data, userId) {
       },
     },
   });
+
+  logger.info({
+    message: "Item atualizado com sucesso",
+    itemId,
+    userId,
+    title: updatedItem.title,
+  });
+
+  return updatedItem;
 }
 
 export async function deleteItem(id, userId) {
   const itemId = validateId(id);
   validateId(userId);
 
+  logger.debug({
+    message: "Deletando item",
+    itemId,
+    userId,
+  });
+
   const item = await prisma.item.findUnique({ where: { id: itemId } });
-  if (!item) throw new AppError("Item não encontrado", 404);
-  if (item.ownerId !== userId) throw new AppError("Acesso negado. Você não é o dono deste item.", 403);
+  if (!item) {
+    logger.warn({
+      message: "Tentativa de deletar item inexistente",
+      itemId,
+      userId,
+    });
+    throw new AppError("Item não encontrado", 404);
+  }
+  if (item.ownerId !== userId) {
+    logger.warn({
+      message: "Tentativa de deletar item de outro usuário",
+      itemId,
+      itemOwnerId: item.ownerId,
+      userId,
+    });
+    throw new AppError("Acesso negado. Você não é o dono deste item.", 403);
+  }
 
   await prisma.item.delete({ where: { id: itemId } });
+  
+  logger.info({
+    message: "Item deletado com sucesso",
+    itemId,
+    userId,
+    title: item.title,
+  });
+
   return { message: "Item excluído com sucesso!" };
 }

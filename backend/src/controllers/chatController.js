@@ -1,12 +1,21 @@
 import prisma from "../prisma/client.js";
 import { successResponse, errorResponse } from "../utils/responseHelper.js";
 import { asyncHandler } from "../middlewares/errorHandler.js";
+import logger from "../logger/logger.js";
 
 export const chatController = {
   getMessages: asyncHandler(async (req, res) => {
     const { itemId } = req.params;
+    const itemIdNum = Number(itemId);
+    
+    logger.info({
+      message: "Buscando mensagens do item",
+      itemId: itemIdNum,
+      ip: req.ip,
+    });
+
     const messages = await prisma.message.findMany({
-      where: { itemId: Number(itemId) },
+      where: { itemId: itemIdNum },
       include: {
         user: {
           select: {
@@ -19,11 +28,23 @@ export const chatController = {
       orderBy: { timestamp: "asc" },
     });
 
+    logger.info({
+      message: "Mensagens recuperadas com sucesso",
+      itemId: itemIdNum,
+      count: messages.length,
+    });
+
     return successResponse(res, "Mensagens recuperadas com sucesso!", messages);
   }),
 
   getUserChats: asyncHandler(async (req, res) => {
     const userId = req.user.id; // obtido via middleware JWT
+
+    logger.info({
+      message: "Buscando chats do usuário",
+      userId,
+      ip: req.ip,
+    });
 
     // Busca todos os itens que o usuário possui ou participou do chat
     const items = await prisma.item.findMany({
@@ -80,6 +101,12 @@ export const chatController = {
       createdAt: item.createdAt,
     }));
 
+    logger.info({
+      message: "Chats do usuário recuperados com sucesso",
+      userId,
+      count: formattedItems.length,
+    });
+
     return successResponse(res, "Chats do usuário recuperados com sucesso!", formattedItems);
   }),
 
@@ -108,9 +135,21 @@ export const chatController = {
           },
         },
       });
+      logger.info({
+        message: "Mensagem salva com sucesso",
+        messageId: message.id,
+        userId: message.userId,
+        itemId: message.itemId,
+      });
+      
       return message;
     } catch (error) {
-      console.error("Erro ao salvar mensagem:", error);
+      logger.error({
+        message: "Erro ao salvar mensagem",
+        error: error.message,
+        stack: error.stack,
+        data,
+      });
       throw error;
     }
   },

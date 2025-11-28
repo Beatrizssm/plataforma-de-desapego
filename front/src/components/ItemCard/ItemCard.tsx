@@ -21,56 +21,61 @@ export function ItemCard({ item, onClick }: ItemCardProps) {
     }).format(price);
   };
 
+  // Calcular desconto (simulado - em produção viria do backend)
+  const originalPrice = item.price * 1.67;
+  const discount = Math.round(((originalPrice - item.price) / originalPrice) * 100);
+  const showDiscount = discount > 0;
+
   return (
     <Link
       to={`/item/${item.id}`}
       onClick={onClick}
-      className="block bg-card rounded-2xl border-2 border-border shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden group"
+      className="block bg-white rounded-lg border border-gray-200 transition-all duration-300 overflow-hidden group no-underline hover:no-underline"
+      style={{ boxShadow: '0px 0px 10px rgba(46, 46, 46, 0)' }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = '0px 0px 10px rgba(46, 46, 46, 0.3)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = '0px 0px 10px rgba(46, 46, 46, 0)';
+      }}
     >
       {/* Image */}
-      <div className="relative h-48 bg-muted overflow-hidden">
+      <div className="relative h-48 bg-gray-100 overflow-hidden">
         <img
           src={item.imageUrl || "https://via.placeholder.com/400x300?text=Sem+Imagem"}
           alt={item.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <Badge
-          className={`absolute top-3 right-3 ${
-            item.available
-              ? "bg-green-600 text-white"
-              : "bg-amber-600 text-white"
-          }`}
-        >
-          {item.available ? "Disponível" : "Indisponível"}
-        </Badge>
+        {showDiscount && (
+          <Badge className="absolute top-3 right-3 bg-red-500 text-white text-sm px-2 py-1">
+            {discount}%
+          </Badge>
+        )}
       </div>
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="font-semibold text-foreground text-lg mb-2 line-clamp-2 group-hover:text-primary-400 transition-colors">
-          {item.title}
-        </h3>
-        <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-          {item.description}
-        </p>
-
         {/* Price */}
-        <div className="mb-3">
-          <span className="text-primary-400 font-bold text-xl">
-            {formatPrice(item.price)}
-          </span>
+        <div className="mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[#3A3A3A] font-bold text-lg">
+              {formatPrice(item.price)}
+            </span>
+            {showDiscount && (
+              <span className="text-gray-400 text-sm line-through">
+                {formatPrice(originalPrice)}
+              </span>
+            )}
+          </div>
         </div>
 
+        <h3 className="font-semibold text-[#3A3A3A] text-base mb-1 line-clamp-2">
+          {item.title}
+        </h3>
+
         {/* Footer Info */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border">
-          <div className="flex items-center gap-1">
-            <User className="h-3 w-3" />
-            <span>{item.owner.name}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            <span>{new Date(item.createdAt).toLocaleDateString("pt-BR")}</span>
-          </div>
+        <div className="text-xs text-gray-500 pt-2">
+          <span>{item.owner.name}</span>
         </div>
       </div>
     </Link>

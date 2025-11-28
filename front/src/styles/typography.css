@@ -1,3 +1,14 @@
+/* Cartoon Toy Turbo Font */
+@font-face {
+  font-family: 'Cartoon Toy Turbo';
+  src: url('/fonts/CartoonToyTurbo-Bold.ttf') format('truetype'),
+       url('/fonts/CartoonToyTurbo-Bold.woff') format('woff'),
+       url('/fonts/CartoonToyTurbo-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Typography styles */
 :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
     h1 {

@@ -1,28 +1,19 @@
 /**
  * Header/Navbar principal
- * Design conforme Figma
+ * Design conforme imagem
  */
 
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { Button } from "../ui/button";
-import { 
-  Home, 
-  Package, 
-  MessageSquare, 
-  User, 
-  LogOut,
-  Plus,
-  Menu,
-  X
-} from "lucide-react";
+import { Search, LogOut } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Input } from "../ui/input";
 
 export function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleLogout = () => {
     logout();
@@ -30,119 +21,94 @@ export function Header() {
     toast.success("Logout realizado com sucesso!");
   };
 
-  const navItems = [
-    { path: "/home", label: "Início", icon: Home },
-    { path: "/items", label: "Itens", icon: Package },
-    { path: "/profile", label: "Perfil", icon: User },
-  ];
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Implementar busca se necessário
+    if (searchQuery.trim()) {
+      navigate(`/home?search=${searchQuery}`);
+    }
+  };
 
   return (
-    <header className="bg-primary-400 text-primary-50 shadow-medium sticky top-0 z-50">
+    <header className="bg-[#5941F2] text-white shadow-medium sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo */}
-          <Link to="/home" className="flex items-center gap-2">
-            <div className="bg-primary-500 p-2 rounded-lg">
-              <Package className="h-6 w-6 text-primary-50" />
-            </div>
-            <span className="font-bold text-xl">Desapego</span>
+          <Link to="/home" className="flex items-center no-underline hover:no-underline flex-shrink-0">
+            <img 
+              src="/Captura de tela 2025-11-28 005239.png" 
+              alt="DESAPEGA" 
+              className="h-14 w-auto"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.style.display = 'none';
+              }}
+            />
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-primary-300 transition-colors"
-                >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Actions */}
-          <div className="hidden md:flex items-center gap-3">
-            <Button
-              onClick={() => navigate("/add-item")}
-              className="bg-primary-500 hover:bg-primary-500/90 text-primary-50"
-              size="sm"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Item
-            </Button>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-300/20">
-              <User className="h-5 w-5" />
-              <span className="text-sm">{user?.name || "Usuário"}</span>
+          {/* Barra de Busca - Centro */}
+          <form onSubmit={handleSearch} className="flex-1 max-w-2xl mx-4">
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Buscar..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white text-gray-900 placeholder:text-gray-400 border-0 rounded-lg pl-4 pr-10 py-2 focus:ring-2 focus:ring-white/50"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[#5941F2] hover:text-[#4a35d1] transition-colors"
+              >
+                <Search className="h-5 w-5" />
+              </button>
             </div>
-            <Button
+          </form>
+
+          {/* Links de Navegação - Direita */}
+          <nav className="hidden md:flex items-center gap-4 flex-shrink-0">
+            <Link
+              to="/profile"
+              className="text-white hover:text-white/80 transition-colors no-underline text-sm font-medium"
+            >
+              Perfil
+            </Link>
+            <Link
+              to="/my-sales"
+              className="text-white hover:text-white/80 transition-colors no-underline text-sm font-medium"
+            >
+              Minhas Compras
+            </Link>
+            <Link
+              to="/my-sales"
+              className="text-white hover:text-white/80 transition-colors no-underline text-sm font-medium"
+            >
+              Minhas Vendas
+            </Link>
+            <Link
+              to="/support"
+              className="text-white hover:text-white/80 transition-colors no-underline text-sm font-medium"
+            >
+              Suporte
+            </Link>
+            <button
               onClick={handleLogout}
-              variant="ghost"
-              size="sm"
-              className="text-primary-50 hover:bg-primary-300"
+              className="text-white hover:text-white/80 transition-colors text-sm font-medium flex items-center gap-1"
             >
               <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
+              Sair
+            </button>
+          </nav>
 
           {/* Mobile Menu Button */}
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-primary-300"
+            onClick={() => navigate("/profile")}
+            className="md:hidden p-2 rounded-lg hover:bg-white/20"
           >
-            {mobileMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
+            <span className="text-sm">Menu</span>
           </button>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-primary-300">
-            <nav className="flex flex-col gap-2">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary-300 transition-colors"
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-              <Button
-                onClick={() => {
-                  navigate("/add-item");
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full bg-primary-500 hover:bg-primary-500/90 text-primary-50 mt-2"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Item
-              </Button>
-              <Button
-                onClick={handleLogout}
-                variant="ghost"
-                className="w-full text-primary-50 hover:bg-primary-300 mt-2"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </Button>
-            </nav>
-          </div>
-        )}
       </div>
     </header>
   );
 }
-

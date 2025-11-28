@@ -4,6 +4,7 @@
  */
 
 import api from "./api";
+import logger from "../utils/logger";
 
 export interface Item {
   id: number;
@@ -54,39 +55,73 @@ class ItemService {
    * Busca todos os itens
    */
   async getAllItems(): Promise<Item[]> {
-    const response = await api.get<ItemsResponse>("/items");
-    return response.data || [];
+    try {
+      const response = await api.get<ItemsResponse>("/items");
+      logger.info("Itens carregados", { count: response.data?.length || 0 });
+      return response.data || [];
+    } catch (error) {
+      logger.error("Erro ao carregar itens", error);
+      throw error;
+    }
   }
 
   /**
    * Busca um item por ID
    */
   async getItemById(id: number): Promise<Item> {
-    const response = await api.get<ItemResponse>(`/items/${id}`);
-    return response.data;
+    try {
+      logger.debug("Buscando item por ID", { itemId: id });
+      const response = await api.get<ItemResponse>(`/items/${id}`);
+      logger.info("Item carregado", { itemId: id, title: response.data.title });
+      return response.data;
+    } catch (error) {
+      logger.error("Erro ao carregar item", { itemId: id, error });
+      throw error;
+    }
   }
 
   /**
    * Cria um novo item (requer autenticação)
    */
   async createItem(data: CreateItemData): Promise<Item> {
-    const response = await api.post<ItemResponse>("/items", data);
-    return response.data;
+    try {
+      logger.info("Criando novo item", { title: data.title });
+      const response = await api.post<ItemResponse>("/items", data);
+      logger.info("Item criado com sucesso", { itemId: response.data.id, title: response.data.title });
+      return response.data;
+    } catch (error) {
+      logger.error("Erro ao criar item", { title: data.title, error });
+      throw error;
+    }
   }
 
   /**
    * Atualiza um item (requer autenticação e ser dono)
    */
   async updateItem(id: number, data: UpdateItemData): Promise<Item> {
-    const response = await api.put<ItemResponse>(`/items/${id}`, data);
-    return response.data;
+    try {
+      logger.info("Atualizando item", { itemId: id, updates: Object.keys(data) });
+      const response = await api.put<ItemResponse>(`/items/${id}`, data);
+      logger.info("Item atualizado com sucesso", { itemId: id });
+      return response.data;
+    } catch (error) {
+      logger.error("Erro ao atualizar item", { itemId: id, error });
+      throw error;
+    }
   }
 
   /**
    * Deleta um item (requer autenticação e ser dono)
    */
   async deleteItem(id: number): Promise<void> {
-    await api.delete(`/items/${id}`);
+    try {
+      logger.info("Deletando item", { itemId: id });
+      await api.delete(`/items/${id}`);
+      logger.info("Item deletado com sucesso", { itemId: id });
+    } catch (error) {
+      logger.error("Erro ao deletar item", { itemId: id, error });
+      throw error;
+    }
   }
 }
 

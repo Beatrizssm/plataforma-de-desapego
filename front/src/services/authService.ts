@@ -4,6 +4,7 @@
  */
 
 import api from "./api";
+import logger from "../utils/logger";
 
 export interface LoginData {
   email: string;
@@ -44,36 +45,54 @@ class AuthService {
    * Realiza login do usuário
    */
   async login(data: LoginData): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>("/auth/login", data);
+    logger.auth("login", false, { email: data.email });
     
-    if (response.success && response.data.token) {
-      // Salvar token e usuário no localStorage
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+    try {
+      const response = await api.post<AuthResponse>("/auth/login", data);
+      
+      if (response.success && response.data.token) {
+        // Salvar token e usuário no localStorage
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        logger.auth("login", true, { userId: response.data.user.id, email: response.data.user.email });
+      }
+      
+      return response;
+    } catch (error) {
+      logger.auth("login", false, { email: data.email, error });
+      throw error;
     }
-    
-    return response;
   }
 
   /**
    * Registra novo usuário
    */
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>("/auth/register", data);
+    logger.auth("register", false, { email: data.email, name: data.name });
     
-    if (response.success && response.data.token) {
-      // Salvar token e usuário no localStorage
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+    try {
+      const response = await api.post<AuthResponse>("/auth/register", data);
+      
+      if (response.success && response.data.token) {
+        // Salvar token e usuário no localStorage
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        logger.auth("register", true, { userId: response.data.user.id, email: response.data.user.email });
+      }
+      
+      return response;
+    } catch (error) {
+      logger.auth("register", false, { email: data.email, error });
+      throw error;
     }
-    
-    return response;
   }
 
   /**
    * Faz logout do usuário
    */
   logout(): void {
+    const user = this.getCurrentUser();
+    logger.auth("logout", true, { userId: user?.id, email: user?.email });
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   }
@@ -103,6 +122,29 @@ class AuthService {
       return JSON.parse(userStr);
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Altera a senha do usuário
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    logger.auth("changePassword", false, {});
+    
+    try {
+      const response = await api.post<{ success: boolean; message: string }>("/auth/change-password", {
+        currentPassword,
+        newPassword,
+      });
+      
+      if (response.success) {
+        logger.auth("changePassword", true, {});
+      }
+      
+      return response;
+    } catch (error) {
+      logger.auth("changePassword", false, { error });
+      throw error;
     }
   }
 }

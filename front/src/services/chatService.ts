@@ -4,6 +4,7 @@
  */
 
 import api from "./api";
+import logger from "../utils/logger";
 
 export interface Message {
   id: number;
@@ -53,16 +54,30 @@ class ChatService {
    * Busca mensagens de um item específico
    */
   async getMessages(itemId: number): Promise<Message[]> {
-    const response = await api.get<MessagesResponse>(`/chat/messages/${itemId}`);
-    return response.data || [];
+    try {
+      logger.chat("Buscando mensagens", { itemId });
+      const response = await api.get<MessagesResponse>(`/chat/${itemId}`);
+      logger.chat("Mensagens carregadas", { itemId, count: response.data?.length || 0 });
+      return response.data || [];
+    } catch (error) {
+      logger.error("Erro ao carregar mensagens", { itemId, error });
+      throw error;
+    }
   }
 
   /**
    * Busca todos os chats do usuário logado
    */
   async getUserChats(): Promise<ChatItem[]> {
-    const response = await api.get<UserChatsResponse>("/chat/me");
-    return response.data || [];
+    try {
+      logger.chat("Buscando chats do usuário");
+      const response = await api.get<UserChatsResponse>("/chat/me");
+      logger.chat("Chats carregados", { count: response.data?.length || 0 });
+      return response.data || [];
+    } catch (error) {
+      logger.error("Erro ao carregar chats", { error });
+      throw error;
+    }
   }
 }
 

@@ -7,6 +7,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { toast } from "sonner";
 import { useAuth } from "./useAuth";
+import logger from "../utils/logger";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:4000";
 
@@ -45,19 +46,19 @@ export function useChat({ itemId, onNewMessage }: UseChatOptions) {
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      console.log("🟢 Conectado ao chat:", socket.id);
+      logger.chat("Conectado ao chat", { socketId: socket.id, itemId });
       setIsConnected(true);
       socket.emit("joinRoom", `item-${itemId}`);
     });
 
     socket.on("disconnect", () => {
-      console.log("🔴 Desconectado do chat");
+      logger.chat("Desconectado do chat", { itemId });
       setIsConnected(false);
     });
 
     // Receber mensagens em tempo real
     socket.on("receiveMessage", (data: any) => {
-      console.log("💬 Nova mensagem recebida:", data);
+      logger.chat("Nova mensagem recebida", { itemId, messageId: data.id });
 
       if (data.type === "system") {
         return;
@@ -126,6 +127,7 @@ export function useChat({ itemId, onNewMessage }: UseChatOptions) {
   const sendMessage = useCallback(
     (text: string) => {
       if (!socketRef.current || !socketRef.current.connected || !user) {
+        logger.warn("Tentativa de enviar mensagem sem conexão", { itemId, userId: user?.id });
         toast.error("Não conectado ao servidor. Aguarde...");
         return false;
       }
@@ -134,6 +136,8 @@ export function useChat({ itemId, onNewMessage }: UseChatOptions) {
       if (!messageText) {
         return false;
       }
+
+      logger.chat("Enviando mensagem", { itemId, userId: user.id, messageLength: messageText.length });
 
       socketRef.current.emit("sendMessage", {
         userId: user.id,
@@ -151,6 +155,7 @@ export function useChat({ itemId, onNewMessage }: UseChatOptions) {
   // Carregar histórico de mensagens
   const loadMessages = useCallback(async () => {
     try {
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
       const token = localStorage.getItem("token");
       const headers: HeadersInit = {
         "Content-Type": "application/json",
@@ -160,7 +165,7 @@ export function useChat({ itemId, onNewMessage }: UseChatOptions) {
       }
 
       const response = await fetch(
-        `${SOCKET_URL.replace(":4000", "")}/api/chat/messages/${itemId}`,
+        `${API_URL}/chat/${itemId}`,
         { headers }
       );
 
@@ -168,10 +173,11 @@ export function useChat({ itemId, onNewMessage }: UseChatOptions) {
         const data = await response.json();
         if (data.success && data.data) {
           setMessages(data.data);
+          logger.chat("Mensagens carregadas", { itemId, count: data.data.length });
         }
       }
     } catch (error) {
-      console.error("Erro ao carregar mensagens:", error);
+      logger.error("Erro ao carregar mensagens", error);
     }
   }, [itemId]);
 

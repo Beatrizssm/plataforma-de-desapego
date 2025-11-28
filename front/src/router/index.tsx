@@ -15,14 +15,10 @@ import { HomePage } from "../pages/Home/HomePage";
 import { ItemDetailsPage } from "../pages/ItemDetails/ItemDetailsPage";
 import { ProfilePage } from "../pages/Profile/ProfilePage";
 import { ChatPage } from "../pages/Chat/ChatPage";
-
-// Legacy pages (para compatibilidade)
-import { DashboardPage } from "../components/DashboardPage";
+import { MySalesPage } from "../pages/MySales/MySalesPage";
 import { AddItemPage } from "../components/AddItemPage";
-import { ItemsListPage } from "../components/ItemsListPage";
-import { HistoryPage } from "../components/HistoryPage";
-import { StatsPage } from "../components/StatsPage";
-import { SupportPage } from "../components/SupportPage";
+import { SupportPage } from "../pages/Support/SupportPage";
+import { AccountDataPage } from "../pages/AccountData/AccountDataPage";
 
 export function AppRouter() {
   return (
@@ -68,38 +64,11 @@ export function AppRouter() {
               </ProtectedRoute>
             }
           />
-
-          {/* Legacy Routes (mantidas para compatibilidade) */}
           <Route
-            path="/dashboard"
+            path="/my-sales"
             element={
               <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/add-item"
-            element={
-              <ProtectedRoute>
-                <AddItemPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/items" element={<ItemsListPage />} />
-          <Route
-            path="/history"
-            element={
-              <ProtectedRoute>
-                <HistoryPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/stats"
-            element={
-              <ProtectedRoute>
-                <StatsPage />
+                <MySalesPage />
               </ProtectedRoute>
             }
           />
@@ -108,6 +77,32 @@ export function AppRouter() {
             element={
               <ProtectedRoute>
                 <SupportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account-data"
+            element={
+              <ProtectedRoute>
+                <AccountDataPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Legacy Routes (mantidas para compatibilidade) */}
+          <Route
+            path="/add-item"
+            element={
+              <ProtectedRoute>
+                <AddItemPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-sales"
+            element={
+              <ProtectedRoute>
+                <MySalesPage />
               </ProtectedRoute>
             }
           />

@@ -3,3 +3,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Estilos para links de texto (Header, Footer e demais links) */
+  a:not(.no-underline):hover {
+    text-decoration: underline;
+  }
+  
+  /* Links que são botões não devem ter underline */
+  a button,
+  button a,
+  .no-underline {
+    text-decoration: none !important;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
